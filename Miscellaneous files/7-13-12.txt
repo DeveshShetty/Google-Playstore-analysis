@@ -1,0 +1,180 @@
+### ye 12 he
+def nine():
+    global screen11, choice, pos, neg, same
+    screen11 = Tk()
+    screen11.title("Apps that have generate most positive and negative sentiments and same ratio of Positive and negative sentiments")
+    adjustWindow(screen11)
+    screen11.configure(background = 'white')
+    #screen11.wm_iconbitmap('try.ico')
+    choice = StringVar()
+    pos = []
+    neg = []
+    same = []
+    positive = negative = neutral = 0
+    pos_senti = []
+    neg_senti = []
+    neutral_senti = []
+    total_senti = []
+    per_pos = []
+    per_neg = []
+    per_neutral = []
+    Label(screen11, text="Apps with most positive, negative and same number of Sentiments", width='70', height="3", font=("Calibri", 15, 'bold'), fg='white', bg='#d9660a').pack() 
+    Label(screen11, text = "", bg = 'white').pack()
+    data1 = pd.read_csv("appdata2.csv")
+    copy = data1.copy()
+    copy.drop(['Translated_Review', 'Sentiment_Polarity', 'Sentiment_Subjectivity'], axis = 1, inplace = True)
+    copy = copy.dropna()    
+    app_list = list(copy['App'].unique())
+    for i in app_list:
+        x = copy[copy['App'] == i]
+        if(len(x) != 0):
+            for i in x.Sentiment:
+                if i == 'Positive':
+                    positive = positive + 1
+                if i == 'Negative':
+                    negative = negative + 1
+                if i == 'Neutral':
+                    neutral = neutral + 1
+            pos_senti.append(positive)
+            neg_senti.append(negative)
+            neutral_senti.append(neutral)
+            total_senti.append(positive + negative + neutral)
+            positive = negative = neutral = 0
+        else:
+            for i in x.Sentiment:
+                if i == 'Positive':
+                    positive = positive + 1
+                if i == 'Negative':
+                    negative = negative + 1
+                if i == 'Neutral':
+                    neutral = neutral + 1
+            pos_senti.append(positive)
+            neg_senti.append(negative)
+            neutral_senti.append(neutral)
+            total_senti.append(positive + negative + neutral)
+            positive = negative = neutral = 0
+    count = len(pos_senti)
+    for i in range(count):
+        temp = round((pos_senti[i]/total_senti[i])*100, 2)
+        per_pos.append(temp)
+        temp1 = round((neg_senti[i]/total_senti[i])*100, 2)
+        per_neg.append(temp1)
+        temp2 = round((neutral_senti[i]/total_senti[i])*100, 2)
+        per_neutral.append(temp2)
+    data_pos = pd.DataFrame({'App': app_list, 'Positive': per_pos})
+    new_index = (data_pos['Positive'].sort_values(ascending = False)).index.values
+    sorted_pos = data_pos.reindex(new_index)
+    data_neg = pd.DataFrame({'App': app_list, 'Negative': per_neg})
+    new_index = (data_neg['Negative'].sort_values(ascending = False)).index.values
+    sorted_neg = data_neg.reindex(new_index)
+    count = data_pos['Positive'].count()
+    for i in range(count):
+        if(data_pos['Positive'][i] == data_neg['Negative'][i]):
+            same.append(data_pos['App'][i])
+    Label(screen11, text='>>  APP WITH HIGHEST NUMBER OF POSITIVE SENTIMENTS:  '+ sorted_pos['App'].head(1).to_string(index=False), fg='black', bg='white', font=("calibri", 11, 'bold')).place(x = 15, y = 90)
+    Label(screen11, text='>>  APP WITH HIGHEST NUMBER OF NEGATIVE SENTIMENTS:  '+ sorted_neg['App'].head(1).to_string(index=False), fg='black', bg='white', font=("calibri", 11, 'bold')).place(x = 15, y = 120)
+    Label(screen11, text='>>  APPS WITH SAME NUMBER OF POSITIVE AND NEGATIVE SENTIMENTS:', fg='black', bg='white', font=("calibri", 11, 'bold')).place(x = 15, y = 150)
+    y_lm = 160
+    x_lm = 25
+    for i in same:
+        if y_lm == 500:
+            y_lm = 180
+            x_lm = 250
+        else:
+            y_lm = y_lm + 20
+        Label(screen11, text=i, fg='black', bg='white', font=("calibri", 11, 'bold')).place(x = x_lm, y = y_lm)
+    Button(screen11, text = '<<<', bg='brown', fg = 'white', command=screen11.destroy).place(x = 10, y = 560)
+    Label(screen11, text = 'Back to Previous Screen', bg='white', fg='black', font=("calibri", 11, 'bold')).place(x = 50, y = 560)
+    screen11.mainloop()
+  
+#### ye sseven he 
+def six():
+    global screen14    
+    screen14 = Toplevel()
+    screen14.title("All apps whose version is not an issue, % increase and decrease in download")
+    adjustWindow(screen14)
+    screen14.configure(background = 'white')
+   
+    Label(screen14, text="Apps whose version is not an issue, change in download", width='60', height="2", font=("Calibri", 18, 'bold'), fg='white', bg='#d9660a').pack() 
+    Label(screen14, text = "", bg = 'white').pack()    
+    data = pd.read_csv("appdata1.csv")
+    copy = data.copy()    
+    copy.drop(['App', 'Size', 'Reviews', 'Current Ver', 'Type', 'Price', 'Content Rating', 'Genres'], axis = 1, inplace = True)       
+    copy['Installs'] = copy.Installs.str.replace(",","")
+    copy['Installs'] = copy.Installs.str.replace("+","")
+    copy['Installs'] = copy.Installs.replace("Free", 0) 
+    copy['Installs'] = copy['Installs'].astype(float)
+    copy['Installs'].dtype
+    
+    copy['Month'], copy['Date'] = copy['Last Updated'].str.split(' ', 1).str
+
+    copy['Day'], copy['year'] = copy['Date'].str.split(' ', 1).str
+    
+    copy['android'] = copy['Android Ver']
+    
+    copy['year'] = copy['year'].astype(float)
+    
+    value=copy.groupby(['android', 'year'], as_index = False)['Installs'].sum()    
+    value['Installs'] = value['Installs']/10000000   
+    ver=value[value.android == 'Varies with device'].sort_values(by = 'year', ascending = True) 
+    
+    #print(ver)
+    plt.figure(figsize=(5,4))
+    sns.barplot(x = ver['year'], y = ver['Installs'])
+    plt.xticks(rotation = 90)
+    plt.xlabel("Years")
+    plt.ylabel("Downloads(in crore)")
+    plt.title("Apps whose android version is not an issue and can work with varying devices")
+    plt.savefig('C:\\Users\\KARTAVYA\\Desktop\\g1.png', bbox_inches='tight')
+    plt.close()    
+    
+    img = ImageTk.PhotoImage(Image.open("C:\\Users\\KARTAVYA\\Desktop\\g1.png"))
+    label = Label(screen14, image=img, anchor = 'w')
+    label.image=img 
+    label.pack()
+    
+    Label(screen14, text = ">> Downloads in 2012 : 0.01 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> Downloads in 2013 : 0.3051 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> Downloads in 2014 : 1.535 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> Downloads in 2015 : 2.79161 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> Downloads in 2016 : 53.22845 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> Downloads in 2017 : 75.306291 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> Downloads in 2018 : 9190.6464 crores", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = "", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+    Label(screen14, text = ">> % Increase is 9,19,06,364.27 %", bg = 'white',fg='black',font=("calibri", 11, 'bold')).pack()
+
+    Button(screen14, text = '<<<', bg='brown', fg = 'white', command=lambda :[screen14.destroy()]).place(x = 10, y = 620)
+    Label(screen14, text = 'Back to Previous Screen', bg='white', fg='black', font=("calibri", 11, 'bold')).place(x = 50, y = 620)
+    screen14.mainloop()   
+     
+def fig13():
+    fig13=Tk()
+    fig13.title("QUESTION 13")
+    createWindow(fig13)
+    Label(fig13,text="",width="120",height="5",font=Label1_font,fg='white',bg="#FF69B4").place(x=0,y=0)
+    b1= Button(fig13, text="back",bg='#7FFF00', width="10", height="1", font=Button1_font,fg='white',command=fig13.destroy).place(x=1150,y=600) 
+    Label(fig13,text="THE SENTIMENTS CATAGORY WISE COUNT:  Positive   : 23998\nNegative    : 8271\nNeutral    :  5163 ",
+          width="100", height="8", font=Label1_font, fg='black', bg='white').place(x=200, y=200)           
+    print("THE SENTIMENTS CATAGORY WISE COUNT: ",review['Sentiment'].value_counts())
+    
+    
+    
+    Data.Sentiment[Data.Sentiment =='Positive'] = 0
+    Data.Sentiment[Data.Sentiment =='Neutral'] = 1
+    Data.Sentiment[Data.Sentiment =='Negative'] = 2
+    Data.head()
+    
+    Data.dtypes
+    Data['Sentiment'] = Data['Sentiment'].astype('int')
+
+    f=Figure(figsize=(12,8),dpi=80)
+    a=f.add_subplot(111) 
+    a=sns.scatterplot(Data['Sentiment_Polarity'],Data['Sentiment_Subjectivity'],hue=Data['Sentiment'], edgecolor='pink',palette="plasma_r")
+    a.xlabel('Sentiment Polarity')
+    a.ylabel('Sentiment Subjectivity')
+    a.title("Sentiment Analysis")
+    canvas=FigureCanvasTkAgg(f,fig13)
+    canvas.get_tk_widget().place(x=5,y=58)
+    canvas.draw()           
+    
+    fig13.mainloop()
